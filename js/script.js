@@ -159,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // === Configurações ===
   const SHOW_DELAY = 300; // ms antes de aparecer
   const HIDE_DELAY = 2000; // ms pra sumir se parado
-  const MIN_SCROLL_UP = 200; // px mínimos de subida pra mostrar
+  const MIN_SCROLL_UP = 100; // px mínimos de subida pra mostrar
 
   // === Define item ativo inicial ===
   let activeItem = document.querySelector('.dropdown-item[href="#home"]');
