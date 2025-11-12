@@ -269,23 +269,46 @@ document.addEventListener("DOMContentLoaded", () => {
     lastScroll = currentScroll;
   });
 
+  let lastScrollTop = 0;
+  let lastShowScroll = 0; // guarda onde o usuário estava quando o navbar apareceu
   let hideTimeout;
+  let showTimeout;
 
-  // mostra o navbar quando rolar
+  // Configurações fáceis de ajustar:
+  const SHOW_DELAY = 300; // tempo antes de mostrar (ms)
+  const HIDE_DELAY = 3000; // tempo para sumir se parado (ms)
+  const MIN_SCROLL_UP = 100; // distância mínima que precisa subir (px)
+
   window.addEventListener("scroll", () => {
-    // mostra o navbar imediatamente
-    navbarD.style.opacity = "1";
-    navbarD.style.pointerEvents = "auto";
-    navbarD.style.transition = "opacity 0.5s ease";
+    const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
 
-    // limpa qualquer timeout anterior
+    // Verifica se rolou pra cima
+    if (currentScroll < lastScrollTop) {
+      // Só mostra se subiu mais que a distância mínima
+      if (lastScrollTop - currentScroll > MIN_SCROLL_UP) {
+        clearTimeout(showTimeout);
+        showTimeout = setTimeout(() => {
+          navbar.style.opacity = "1";
+          navbar.style.pointerEvents = "auto";
+          navbar.style.transition = "opacity 0.5s ease";
+          lastShowScroll = currentScroll;
+        }, SHOW_DELAY);
+      }
+    } 
+    // Rolando pra baixo
+    else {
+      navbar.style.opacity = "0";
+      navbar.style.pointerEvents = "none";
+    }
+
+    // some após um tempo de inatividade
     clearTimeout(hideTimeout);
-
-    // após 3 segundos sem rolar, esconde o navbar
     hideTimeout = setTimeout(() => {
-      navbarD.style.opacity = "0";
-      navbarD.style.pointerEvents = "none";
-    }, 3000);
+      navbar.style.opacity = "0";
+      navbar.style.pointerEvents = "none";
+    }, HIDE_DELAY);
+
+    lastScrollTop = currentScroll <= 0 ? 0 : currentScroll; // evita negativos
   });
 
 
