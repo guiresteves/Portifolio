@@ -144,138 +144,143 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 
-  /* === NAVBAR (DROPDOWN) === */
-  const dropdown = document.querySelector(".dropdown");
-  const dropdownBtn = document.getElementById("dropdown-btn");
-  const textoBtn = dropdownBtn.querySelector(".texto-btn");
-  const setaBtn = dropdownBtn.querySelector(".seta");
-  const dropdownMenu = document.getElementById("dropdown-menu");
-  const menuItems = document.querySelectorAll(".dropdown-item");
-  const indicadorDrop = document.querySelector(".indicador-item");
+  // Seleciona elementos principais
   const navbarD = document.querySelector(".navbar-dropdown");
-  const homeSection = document.querySelector("#home");
+  const dropdownBtn = document.getElementById("dropdown-btn");
+  const textoBtn = document.querySelector(".texto-btn");
+  const menuItems = document.querySelectorAll(".dropdown-item");
   const sectionsD = document.querySelectorAll("section");
+  const homeSection = document.querySelector("#home");
 
-  // === Configurações ===
-  const SHOW_DELAY = 300; // ms antes de aparecer
-  const HIDE_DELAY = 2000; // ms pra sumir se parado
-  const MIN_SCROLL_UP = 100; // px mínimos de subida pra mostrar
+  let activeItem = menuItems[0]; // Começa com o primeiro item como ativo
+  let dropdownOpen = false;
 
-  // === Define item ativo inicial ===
-  let activeItem = document.querySelector('.dropdown-item[href="#home"]');
-  moveIndicadorDrop(activeItem);
+  // =============================
+  // MENU DROPDOWN
+  // =============================
 
-  // === Dropdown principal ===
-  dropdownBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    dropdown.classList.toggle("open");
-    setaBtn.style.transform = dropdown.classList.contains("open")
-      ? "rotate(180deg)"
-      : "rotate(0deg)";
+  // Abre/fecha dropdown
+  dropdownBtn.addEventListener("click", () => {
+  dropdownOpen = !dropdownOpen;
+  document.getElementById("dropdown-menu").classList.toggle("open", dropdownOpen);
+  dropdownBtn.querySelector(".seta").textContent = dropdownOpen ? "▾" : "▴";
   });
 
-  document.addEventListener("click", (e) => {
-    if (!dropdown.contains(e.target)) {
-      dropdown.classList.remove("open");
-      setaBtn.style.transform = "rotate(0deg)";
+  // Troca texto e indicador
+  menuItems.forEach((item) => {
+  item.addEventListener("click", (e) => {
+    e.preventDefault();
+    dropdownOpen = false;
+    document.getElementById("dropdown-menu").classList.remove("open");
+    dropdownBtn.querySelector(".seta").textContent = "▴";
+
+    activeItem = item;
+    textoBtn.textContent = item.textContent;
+
+    // rola até a seção clicada
+    const target = document.querySelector(item.getAttribute("href"));
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  });
+  });
+
+  // Move o indicador visual (caso tenha)
+  function moveIndicadorDrop(item) {
+  const indicador = document.querySelector(".indicador-item");
+  if (!indicador || !item) return;
+  indicador.style.top = `${item.offsetTop}px`;
+  indicador.style.height = `${item.offsetHeight}px`;
+  }
+
+  // =============================
+  // SCROLL: Atualização + Navbar
+  // =============================
+
+  const SHOW_DELAY = 300; // ms antes de aparecer
+  const HIDE_DELAY = 2000; // ms para esconder
+  const MIN_SCROLL_UP = 200; // px mínimos para reaparecer
+
+  let lastScroll = window.pageYOffset || document.documentElement.scrollTop;
+  let rafId = null;
+  let hideTimeout = null;
+  let showTimeout = null;
+
+  // Atualiza o item ativo com base na seção
+  function updateActiveSection() {
+  let currentSection = "";
+  sectionsD.forEach((section) => {
+    const sectionTop = section.offsetTop - 150;
+    const sectionHeight = section.clientHeight;
+    if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
+      currentSection = section.getAttribute("id");
     }
   });
 
   menuItems.forEach((item) => {
-    item.addEventListener("mouseenter", () => moveIndicadorDrop(item));
-    item.addEventListener("click", (e) => {
-      e.preventDefault();
+    const href = item.getAttribute("href").replace("#", "");
+    if (href === currentSection) {
       activeItem = item;
-      moveIndicadorDrop(item);
       textoBtn.textContent = item.textContent;
-
-      dropdown.classList.remove("open");
-      setaBtn.style.transform = "rotate(0deg)";
-
-      const targetId = item.getAttribute("href");
-      const targetSection = document.querySelector(targetId);
-      if (targetSection) {
-        window.scrollTo({
-          top: targetSection.offsetTop - 100,
-          behavior: "smooth",
-        });
-      }
-    });
+      moveIndicadorDrop(item);
+    }
   });
-
-  dropdownMenu.addEventListener("mouseleave", () => {
-    if (activeItem) moveIndicadorDrop(activeItem);
-  });
-
-  window.addEventListener("scroll", () => {
-    let currentSection = "";
-    sectionsD.forEach((section) => {
-      const sectionTop = section.offsetTop - 150;
-      const sectionHeight = section.clientHeight;
-      if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
-        currentSection = section.getAttribute("id");
-      }
-    });
-
-    menuItems.forEach((item) => {
-      const href = item.getAttribute("href").replace("#", "");
-      if (href === currentSection) {
-        activeItem = item;
-        textoBtn.textContent = item.textContent;
-        moveIndicadorDrop(item);
-      }
-    });
-  });
-
-  function moveIndicadorDrop(element) {
-    const rect = element.getBoundingClientRect();
-    const menuRect = dropdownMenu.getBoundingClientRect();
-    const offsetTop = rect.top - menuRect.top;
-    indicadorDrop.style.top = `${offsetTop}px`;
-    indicadorDrop.style.height = `${rect.height}px`;
   }
 
-  /* === Mostrar/esconder navbar dinamicamente === */
-  let lastScroll = 0;
-  let hideTimeout;
-  let showTimeout;
+  // Controla o mostrar/esconder da navbar
+  function handleNavbarOnScroll() {
+  const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+  const homeBottom = homeSection ? (homeSection.offsetTop + homeSection.offsetHeight) : 0;
 
-  window.addEventListener("scroll", () => {
-    const currentScroll = window.pageYOffset;
-    const homeBottom = homeSection.offsetTop + homeSection.offsetHeight;
-
-    // Sempre visível na Home
-    if (currentScroll < homeBottom) {
-      navbarD.style.opacity = "1";
-      navbarD.style.pointerEvents = "auto";
-      return;
-    }
-
-    // Rolando pra cima
-    if (currentScroll < lastScroll) {
-      if (lastScroll - currentScroll > MIN_SCROLL_UP) {
-        clearTimeout(showTimeout);
-        showTimeout = setTimeout(() => {
-          navbarD.style.opacity = "1";
-          navbarD.style.pointerEvents = "auto";
-          navbarD.style.transition = "opacity 0.5s ease";
-        }, SHOW_DELAY);
-      }
-    } 
-    // Rolando pra baixo
-    else {
-      navbarD.style.opacity = "0";
-      navbarD.style.pointerEvents = "none";
-    }
-
-    // Oculta após tempo parado
+  // Se estiver na seção Home → sempre mostrar
+  if (homeSection && currentScroll < homeBottom) {
+    navbarD.classList.remove("hidden");
     clearTimeout(hideTimeout);
-    hideTimeout = setTimeout(() => {
-      navbarD.style.opacity = "0";
-      navbarD.style.pointerEvents = "none";
-    }, HIDE_DELAY);
+    lastScroll = currentScroll;
+    return;
+  }
 
-    lastScroll = currentScroll <= 0 ? 0 : currentScroll;
+  // Rolando pra cima
+  if (currentScroll < lastScroll) {
+    const distanceUp = lastScroll - currentScroll;
+
+    // só mostra se subiu pelo menos X px
+    if (distanceUp >= MIN_SCROLL_UP) {
+      clearTimeout(showTimeout);
+      showTimeout = setTimeout(() => {
+        navbarD.classList.remove("hidden");
+      }, SHOW_DELAY);
+    }
+  } else {
+    // Rolando pra baixo → esconde
+    clearTimeout(showTimeout);
+    navbarD.classList.add("hidden");
+  }
+
+  // Oculta após tempo parado
+  clearTimeout(hideTimeout);
+  hideTimeout = setTimeout(() => {
+    navbarD.classList.add("hidden");
+  }, HIDE_DELAY);
+
+  lastScroll = Math.max(currentScroll, 0);
+  }
+
+  // Listener de scroll unificado
+  window.addEventListener("scroll", () => {
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(() => {
+    updateActiveSection();
+    handleNavbarOnScroll();
+  });
+  });
+
+  // =============================
+  // Ao carregar
+  // =============================
+  window.addEventListener("load", () => {
+  moveIndicadorDrop(activeItem);
+  textoBtn.textContent = activeItem.textContent;
   });
 
 
