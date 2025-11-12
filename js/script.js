@@ -269,6 +269,25 @@ document.addEventListener("DOMContentLoaded", () => {
     lastScroll = currentScroll;
   });
 
+  let hideTimeout;
+
+  // mostra o navbar quando rolar
+  window.addEventListener("scroll", () => {
+    // mostra o navbar imediatamente
+    navbarD.style.opacity = "1";
+    navbarD.style.pointerEvents = "auto";
+    navbarD.style.transition = "opacity 0.5s ease";
+
+    // limpa qualquer timeout anterior
+    clearTimeout(hideTimeout);
+
+    // após 3 segundos sem rolar, esconde o navbar
+    hideTimeout = setTimeout(() => {
+      navbarD.style.opacity = "0";
+      navbarD.style.pointerEvents = "none";
+    }, 3000);
+  });
+
 
   // ======== SCROLL REVEAL ========
   const observer = new IntersectionObserver(
