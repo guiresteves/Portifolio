@@ -341,7 +341,7 @@ body {
 
 #about {
   display: flex;
-  height: 100%;
+  height: 100vh;
   flex-direction: column;
   align-items: center;
   gap: 50px;
@@ -427,7 +427,7 @@ body {
 
 @media (max-width: 1024px) {
   #about {
-    height: auto;
+    height: 100%;
     padding: 0 100px 100px 100px;
     gap: 30px;
   }
